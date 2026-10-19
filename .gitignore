@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# Data is reproducible from `make all` and too large for git. The download manifest
+# and monitoring snapshots are small and worth tracking.
+data/raw/*
+!data/raw/manifest.csv
+data/processed/*
+data/external/*
+!data/external/README.md

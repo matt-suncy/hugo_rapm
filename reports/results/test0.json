@@ -1,0 +1,20 @@
+{
+  "test": "test0",
+  "generated_at_utc": "2026-10-19T23:24:37+00:00",
+  "season": "2025-26",
+  "lambda": 3000.0,
+  "intercept": 116.22552166606012,
+  "n_stints": 67241,
+  "hugo": {
+    "off": 1.6468864901003404,
+    "def": 1.7583302811559545,
+    "total": 3.4052167712562946,
+    "poss_on": 4238,
+    "rank_qualified": 25.0,
+    "rank_all": 25
+  },
+  "published_corr": null,
+  "published_n": null,
+  "hugo_gap_to_published": -0.19478322874370546,
+  "decision": "PARTIAL: Hugo within 1.5 of published; league-wide correlation pending a published snapshot in data/external/"
+}

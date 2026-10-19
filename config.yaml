@@ -1,0 +1,56 @@
+# Single source of truth for analysis parameters. All scripts read this via src/config.py.
+
+player:
+  id: 1642864            # Hugo Gonzalez (nba.com person id)
+  name: Hugo Gonzalez
+  team_id: 1610612738    # BOS
+
+seasons:
+  primary: 2025-26
+  secondary: 2026-27     # monitoring; no games before 2026-10-20
+  # Historical seasons for k estimation, winner's-curse persistence, box prior.
+  # CDN play-by-play (needed for lineups) only exists from 2020-21 onward.
+  history: [2020-21, 2021-22, 2022-23, 2023-24, 2024-25]
+  # Season totals (no lineups needed) reach further back.
+  totals_history: [2018-19, 2019-20, 2020-21, 2021-22, 2022-23, 2023-24, 2024-25]
+
+# Published values for Hugo quoted in the analysis plan
+# (hugo_gonzalez_rapm_analysis_plan.md; nbarapm.com, retrieval date not recorded).
+# League-wide snapshots go in data/external/ (see data/external/README.md).
+published_hugo:
+  darko: {"off": -1.8, "def": 1.1, total: -0.7, rank: 261}
+  lebron: {"off": -2.0, "def": 1.8, total: -0.1, rank: 182}
+  rapm_timedecay: {"off": 1.9, "def": 1.4, total: 3.4, rank: 33}
+  rapm_1y: {"off": 2.0, "def": 1.6, total: 3.6, rank: 23}
+
+sources:
+  shufinskiy_base: https://github.com/shufinskiy/nba_data/raw/main/datasets
+  pbpstats_api: https://api.pbpstats.com
+  request_pause_seconds: 1.5   # politeness delay between uncached API calls
+
+garbage_time:
+  # A possession is garbage time when it is in period >= `period` and any rule matches
+  # (seconds remaining in the period <= max_seconds_remaining AND |margin| >= min_margin).
+  # With revert_if_close, the flag only sticks if the condition then holds for every
+  # remaining possession of the game; a comeback un-flags the whole stretch.
+  period: 4
+  rules:
+    - {max_seconds_remaining: 720, min_margin: 25}
+    - {max_seconds_remaining: 300, min_margin: 20}
+  revert_if_close: true
+
+rapm:
+  exclude_garbage_time: false   # Test 0 matches published (all-possession) RAPM
+  lambda_grid: [100, 200, 500, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 12000, 20000, 50000]
+  cv_folds: 5
+  lambda_sensitivity_multipliers: [0.25, 0.5, 1.0, 2.0, 4.0]
+  bootstrap_reps: 500
+  split_half_reps: 100
+  min_possessions_report: 500
+
+stabilize:
+  k_grid: [1, 2, 5, 10, 20, 30, 50, 75, 100, 150, 200, 300, 400, 500, 750, 1000, 1500, 2000]
+  split_half_min_trials: 200
+  split_half_reps: 50
+
+seed: 20251021
