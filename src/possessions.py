@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import re
 from collections import defaultdict
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -113,19 +114,49 @@ def subbed_in_first(p: pd.DataFrame, teams: dict[int, int]) -> set[int]:
 
 
 def _fill_starters(detected: set[int], excluded: set[int], period_lineups: list[frozenset],
-                   prev_end: set[int]) -> set[int] | None:
-    """Pick the period's starting five from pbpstats' lineup list for that period.
+                   prev_end: set[int], subs: list[tuple[float, str, int]],
+                   start_clock: float) -> set[int] | None:
+    """Pick the period's starting five when some starters recorded no events.
 
-    Candidates must contain every detected starter and no player who first appeared via a
-    sub-in. Ties are broken by overlap with the previous period's closing lineup.
+    Candidates are the detected starters plus players drawn from pbpstats' lineups for the
+    period and the previous period's closing five, excluding anyone whose first appearance
+    was a sub-in. A candidate must survive a replay of the period's substitutions
+    (`subs` = (clock, "in"/"out", player) in order): every player subbed out must be on the
+    floor, and every five-man state that lasted any time must be one of pbpstats' lineups.
+    States that lasted zero time (e.g. a sub at the opening tip of OT) don't appear in
+    pbpstats' list and aren't checked. Ties are broken by overlap with `prev_end`.
     """
-    cands = [lu for lu in period_lineups if detected <= lu and not (lu & excluded)]
+    known = set(period_lineups)
+    pool = (set().union(*period_lineups) | prev_end) - excluded - detected
+    need = 5 - len(detected)
+    if need < 0:
+        return None
+
+    def replays(lu: set[int]) -> bool:
+        cur, t_prev = set(lu), start_clock
+        for i, (clk, how, pid) in enumerate(subs):
+            if clk != t_prev and frozenset(cur) not in known:
+                return False  # the lineup before this sub group was on the floor
+            t_prev = clk
+            if how == "out":
+                if pid not in cur:
+                    return False
+                cur.discard(pid)
+            else:
+                cur.add(pid)
+            last_in_group = i + 1 == len(subs) or subs[i + 1][0] != clk
+            if last_in_group and len(cur) != 5:
+                return False
+        return frozenset(cur) in known
+
+    cands = [detected | set(c) for c in combinations(sorted(pool), need)]
+    cands = [c for c in cands if replays(c)]
     if not cands:
         return None
     cands.sort(key=lambda lu: -len(lu & prev_end))
     if len(cands) > 1 and len(cands[0] & prev_end) == len(cands[1] & prev_end):
         return None
-    return set(cands[0])
+    return cands[0]
 
 
 def pbpstats_period_lineups(game_id: int, home: int, away: int) -> dict[tuple[int, int], list]:
@@ -184,8 +215,11 @@ def parse_game(g: pd.DataFrame, home: int, away: int, issues: list,
                     pbp_lineups = lineup_source()
                 filled = None
                 if pbp_lineups is not None:
+                    subs = [(clock_seconds(r.clock), r.subType, int(r.personId))
+                            for r in p.itertuples(index=False)
+                            if r.actionType == "substitution" and int(r.teamId) == t]
                     filled = _fill_starters(s, excluded, pbp_lineups.get((period, t), []),
-                                            prev_end[t])
+                                            prev_end[t], subs, clock_seconds(p.clock.iat[0]))
                 issues.append({"game_id": gid, "period": period, "team": t,
                                "detected": len(s), "filled": filled is not None})
                 if filled is None:
@@ -265,8 +299,9 @@ def parse_game(g: pd.DataFrame, home: int, away: int, issues: list,
                     add(run, credit, "ftm")
                     add(run, credit, "points")
                 shot_list.append(((run, credit), _shot(r, gid, period, shooter, 1, made)))
-                n, of = str(r.subType).split(" of ")
-                live = n == of and r.descriptor not in ("technical", "flagrant")
+                # "n of m"; a few malformed rows ("shot", missing) are treated as the last FT
+                n, _, of = str(r.subType).partition(" of ")
+                live = (n == of or not of) and r.descriptor not in ("technical", "flagrant")
                 pending_miss = (run, credit, shooter) if (live and not made) else None
             elif a == "rebound":
                 if pending_miss is not None and "deadball" not in str(r.qualifiers):
@@ -316,8 +351,9 @@ def _margin(r, off: int, home: int) -> float:
 def _shot(r, gid: int, period: int, team: int, value: int, made: bool) -> dict:
     return {"game_id": gid, "period": period, "clock": clock_seconds(r.clock),
             "team_id": team, "shooter_id": int(r.personId), "value": value,
-            "made": bool(made), "area": r.area if value > 1 else None,
-            "area_detail": r.areaDetail if value > 1 else None,
+            # area/areaDetail are absent from the 2020-21 and 2021-22 dumps
+            "made": bool(made), "area": getattr(r, "area", None) if value > 1 else None,
+            "area_detail": getattr(r, "areaDetail", None) if value > 1 else None,
             "shot_distance": r.shotDistance, "x": r.x, "y": r.y,
             "descriptor": r.descriptor, "sub_type": r.subType,
             "assisted": bool(pd.notna(r.assistPersonId) and r.assistPersonId > 0),

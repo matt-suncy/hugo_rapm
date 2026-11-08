@@ -67,7 +67,16 @@ def report(season: str) -> str:
     p = player_checks(poss, season)
     pm = p.dropna(subset=["off_poss", "off_poss_pbp"])
     big = pm[pm.off_poss_pbp >= 500]
-    hugo = p[p.player_id == config.load()["player"]["id"]].iloc[0]
+    hugo = p[p.player_id == config.load()["player"]["id"]]
+    hugo_lines = ["Did not play this season.", ""] if hugo.empty else [
+        "| | ours | pbpstats |",
+        "|---|---|---|",
+        f"| Off. possessions | {hugo.off_poss.iat[0]:.0f} | {hugo.off_poss_pbp.iat[0]:.0f} |",
+        f"| Def. possessions | {hugo.def_poss.iat[0]:.0f} | {hugo.def_poss_pbp.iat[0]:.0f} |",
+        f"| Plus-minus | {hugo.plus_minus.iat[0]:+.0f} | {hugo.pm_pbp.iat[0]:+.0f} |",
+        "",
+    ]
+    failed = pd.read_csv(config.PROCESSED / f"failed_games_{season}.csv")
 
     def pct(x):
         return f"{100 * x:.1f}%"
@@ -103,11 +112,12 @@ def report(season: str) -> str:
         "",
         "## Hugo Gonzalez",
         "",
-        "| | ours | pbpstats |",
-        "|---|---|---|",
-        f"| Off. possessions | {hugo.off_poss:.0f} | {hugo.off_poss_pbp:.0f} |",
-        f"| Def. possessions | {hugo.def_poss:.0f} | {hugo.def_poss_pbp:.0f} |",
-        f"| Plus-minus | {hugo.plus_minus:+.0f} | {hugo.pm_pbp:+.0f} |",
+        *hugo_lines,
+        "## Games dropped by the parser",
+        "",
+        (failed.to_markdown(index=False) if len(failed) else "None.") + "\n"
+        "Dropped games still count in the pbpstats totals above, so they show up as "
+        "possession/plus-minus gaps for the players involved.",
         "",
         "## Largest player discrepancies (plus-minus)",
         "",

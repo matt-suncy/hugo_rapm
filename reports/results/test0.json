@@ -1,20 +1,46 @@
 {
   "test": "test0",
-  "generated_at_utc": "2026-10-19T23:24:37+00:00",
-  "season": "2025-26",
-  "lambda": 3000.0,
-  "intercept": 116.22552166606012,
-  "n_stints": 67241,
-  "hugo": {
+  "generated_at_utc": "2026-11-08T18:59:23+00:00",
+  "lambda_1y": 3000.0,
+  "lambda_multi": 3000.0,
+  "hugo_1y": {
     "off": 1.6468864901003404,
     "def": 1.7583302811559545,
     "total": 3.4052167712562946,
     "poss_on": 4238,
-    "rank_qualified": 25.0,
-    "rank_all": 25
+    "rank_qualified": 25
   },
-  "published_corr": null,
-  "published_n": null,
-  "hugo_gap_to_published": -0.19478322874370546,
-  "decision": "PARTIAL: Hugo within 1.5 of published; league-wide correlation pending a published snapshot in data/external/"
+  "hugo_multi": {
+    "off": 1.9818241841220094,
+    "def": 1.7494867173181963,
+    "total": 3.7313109014402057,
+    "poss_on": 4238,
+    "rank_qualified": 56
+  },
+  "hugo_reference": {
+    "off": 0.2,
+    "def": 1.7,
+    "total": 1.9
+  },
+  "corr_multi_vs_reference": {
+    "off": 0.9106351524889116,
+    "def": 0.9301042799955517,
+    "total": 0.9378602415566876
+  },
+  "corr_1y_vs_reference": 0.7188652693732146,
+  "n_corr": 900,
+  "gap_1y": -0.19478322874370546,
+  "gap_multi": 1.8313109014402058,
+  "cohort_n": 91,
+  "cohort_gap": {
+    "off": 1.1813947721328584,
+    "def": 0.5502955451362737,
+    "total": 1.731690317269132
+  },
+  "hugo_gap_vs_reference": {
+    "off": 1.7818241841220095,
+    "def": 0.049486717318196316,
+    "total": 1.8313109014402058
+  },
+  "decision": "PASS"
 }

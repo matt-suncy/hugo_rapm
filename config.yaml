@@ -16,12 +16,23 @@ seasons:
 
 # Published values for Hugo quoted in the analysis plan
 # (hugo_gonzalez_rapm_analysis_plan.md; nbarapm.com, retrieval date not recorded).
-# League-wide snapshots go in data/external/ (see data/external/README.md).
 published_hugo:
   darko: {"off": -1.8, "def": 1.1, total: -0.7, rank: 261}
   lebron: {"off": -2.0, "def": 1.8, total: -0.1, rank: 182}
   rapm_timedecay: {"off": 1.9, "def": 1.4, total: 3.4, rank: 33}
   rapm_1y: {"off": 2.0, "def": 1.6, total: 3.6, rank: 23}
+
+# League-wide published RAPM for Test 0's correlation check. No 1Y table is publicly
+# downloadable; this is a multi-year (2020-21 to 2026-27) RAPM spreadsheet supplied by the
+# user (open-source spreadsheet; origin URL not recorded). Columns: ID, Player, Off, Def,
+# Poss, Tot, where Def is points allowed (negative = good) and Tot = Off - Def.
+reference_rapm:
+  path: "data/raw/RAPM 2020-2027 - Sheet1.csv"
+  label: "Multi-year RAPM 2020-21 to 2026-27 (user-supplied spreadsheet)"
+  def_is_points_allowed: true
+  # Our matching window. 2026-27 play-by-play isn't in the archives yet, so ours stops
+  # a few weeks short of the reference.
+  seasons: [2020-21, 2021-22, 2022-23, 2023-24, 2024-25, 2025-26]
 
 sources:
   shufinskiy_base: https://github.com/shufinskiy/nba_data/raw/main/datasets

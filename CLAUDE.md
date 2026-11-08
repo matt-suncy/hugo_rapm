@@ -31,7 +31,10 @@ Modules run as `python -m src.<module>` (e.g. `src.analysis.test0_baseline`). Im
   `src/ingest.py` (`archive()`, `pbpstats()`), which caches, rate-limits and logs every fetch
   to `data/raw/manifest.csv`.
 - nbarapm.com's robots.txt disallows `/api/`, so don't scrape it. Published league-wide
-  values come only from manual CSVs in `data/external/`.
+  values are supplied by hand. Test 0's reference is a user-supplied **multi-year**
+  (2020-21 to 2026-27) RAPM spreadsheet configured under `reference_rapm`. Its `Def`
+  column is points allowed, so flip the sign. Compare it against our multi-year fit,
+  never the 1-year one.
 - All parameters (seasons, λ grid, garbage-time rule, seeds, bootstrap reps) live in
   `config.yaml`; don't hard-code them. In YAML, quote the keys `"off"`/`"on"`/`"no"`, since
   YAML 1.1 parses them as booleans.

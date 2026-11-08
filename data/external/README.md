@@ -1,11 +1,11 @@
-# Manually exported published metrics
+# Manually supplied published metrics
 
-nbarapm.com's robots.txt disallows `/api/`, so published league-wide RAPM is not scraped.
-To enable Test 0's league-wide correlation check, export the 1Y RAPM table by hand and save it
-as `nbarapm_rapm_<YYYY-MM-DD>.csv` (the retrieval date). The newest file is used.
+nbarapm.com's robots.txt disallows `/api/`, and it offers no downloadable 1-year RAPM table,
+so published metrics are supplied by hand.
 
-Required columns (aliases accepted, see `ALIASES` in `src/analysis/test0_baseline.py`):
-- `player_id` (nba.com id) **or** `name` (must match pbpstats names)
-- `total` (RAPM total, pts/100)
-
-DARKO / LEBRON snapshots for Test 8 monitoring go in `data/monitoring/metrics_snapshots.csv`.
+- **Test 0 reference RAPM:** a multi-year (2020-21 to 2026-27) RAPM spreadsheet in
+  `data/raw/RAPM 2020-2027 - Sheet1.csv`, configured in `config.yaml` under
+  `reference_rapm` (path, sign convention, matching window). To swap in another table,
+  point that block at the new file.
+- **Test 8 monitoring:** DARKO / LEBRON / RAPM snapshots go in
+  `data/monitoring/metrics_snapshots.csv`, one row per player-metric-date.

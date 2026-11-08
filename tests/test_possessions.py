@@ -98,3 +98,26 @@ def test_garbage_time_reverts_if_game_gets_close():
     })
     flags = P.garbage_time_flags(df, rule).sort_index().tolist()
     assert flags == [False, False, False, False, True, True, True]
+
+
+def test_fill_starters_replays_substitutions():
+    # 5 never appears in the period; 6 subs in for 1, 7 subs in for 5.
+    a = frozenset({1, 2, 3, 4, 5})
+    b = frozenset({1, 2, 3, 4, 8})          # plausible but wrong: 8 sits the whole period
+    after1, after2 = frozenset({6, 2, 3, 4, 5}), frozenset({6, 2, 3, 4, 7})
+    subs = [(200, "out", 1), (200, "in", 6), (100, "out", 5), (100, "in", 7)]
+    picked = P._fill_starters({1, 2, 3, 4}, excluded={6, 7},
+                              period_lineups=[a, b, after1, after2], prev_end=set(),
+                              subs=subs, start_clock=300)
+    assert picked == set(a)
+
+
+def test_fill_starters_zero_second_lineup_at_period_start():
+    # Two starters are subbed out at the opening clock, so the true starting five never
+    # appears in pbpstats' list; 9 started (no events) and stayed on.
+    true_start = {1, 2, 3, 4, 9}
+    after = frozenset({3, 4, 9, 6, 7})
+    subs = [(300, "out", 1), (300, "out", 2), (300, "in", 6), (300, "in", 7)]
+    picked = P._fill_starters({1, 2, 3, 4}, excluded={6, 7}, period_lineups=[after],
+                              prev_end={1, 2, 3, 4, 9}, subs=subs, start_clock=300)
+    assert picked == true_start
